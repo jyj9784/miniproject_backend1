@@ -66,6 +66,7 @@ router.post("/login", async (req, res) => {
   try {
     const { ID, password } = await postAuthSchema.validateAsync(req.body);
     const user = await User.findOne({ ID, password }).exec();
+    console.log(user);
 
     if (!user) {
       res.status(400).send({
@@ -74,8 +75,8 @@ router.post("/login", async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ nickname }, "my-secret-key");
-    console.log(`${nickname}님이 로그인 하셨습니다.`);
+    const token = jwt.sign( user.nickname , "my-secret-key");
+    console.log(`${user.nickname}님이 로그인 하셨습니다.`);
     res.send({
       result: true,
       token,
