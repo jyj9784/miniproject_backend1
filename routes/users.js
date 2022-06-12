@@ -6,8 +6,8 @@ const router = express.Router();
 
 //회원가입 조건
 const postUserSchema = Joi.object({
-  ID: Joi.string().alphanum().min(4).max(12).required(),
-  nickname: Joi.string().alphanum().min(2).max(12).required(),
+  ID: Joi.string().alphanum().min(4).max(16).required(),
+  nickname: Joi.string().pattern(new RegExp('^[ㄱ-ㅎㅏ-ㅣ가-힇a-zA-Z0-9]{2,16}$')),
   password: Joi.string().min(4).required(),
   passwordCheck: Joi.string().required(),
 });
