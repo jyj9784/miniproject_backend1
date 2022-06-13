@@ -3,6 +3,8 @@ const Post = require("../schemas/post");
 const Comment = require("../schemas/comment");
 const authMiddleware = require("../middlewares/auth-middleware");
 const router = express.Router();
+const multer = require('multer');
+
 
 //전체 조회
 router.get("/", async (req, res) => {
@@ -88,6 +90,55 @@ router.delete("/:postId", authMiddleware, async (req, res) => {
     res.json({ result: true });
     return;
   }
+});
+
+
+// 업로드 API
+/* Create new image */
+router.post('/uploads', function(req, res, next) {
+  res.send('test');
+});
+
+// 서버에 저장될 파라매터
+router.post('/uploads/:filename', function(req, res, next) {
+  // ...
+});
+
+// upload()함수 구현
+var upload = function (req, res) {
+  var deferred = Q.defer();
+  var storage = multer.diskStorage({
+    // 서버에 저장할 폴더 
+    destination: function (req, file, cb) {
+      cb(null, imagePath);
+    },
+
+    // 서버에 저장할 파일 명
+    filename: function (req, file, cb) {
+      file.uploadedFile = {
+        name: req.params.filename,
+        ext: file.mimetype.split('/')[1]
+      };
+      cb(null, file.uploadedFile.name + '.' + file.uploadedFile.ext);
+    }
+  });
+
+  var upload = multer({ storage: storage }).single('file');
+  upload(req, res, function (err) {
+    if (err) deferred.reject();
+    else deferred.resolve(req.file.uploadedFile);
+  });
+  return deferred.promise;
+};
+
+
+/* Create new image */
+router.post('/uploads/:filename', function(req, res, next) {
+  upload(req, res).then(function (file) {
+    res.json(file);
+  }, function (err) {
+    res.send(500, err);
+  });
 });
 
 module.exports = router;

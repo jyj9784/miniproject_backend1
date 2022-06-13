@@ -1,3 +1,4 @@
+require('dotenv').config()
 const jwt = require("jsonwebtoken");
 const User = require("../schemas/user");
 
@@ -12,8 +13,9 @@ module.exports = (req, res, next) => {
     return;
   }
 
+  // 변경사항 token
   try {
-    const { username } = jwt.verify(authToken, "my-secret-key");
+    const { username } = jwt.verify(authToken, process.env.MY_SECRET_KEY);
     console.log(username);
     User.findOne({username}).then((user) => {
       res.locals.user = user;

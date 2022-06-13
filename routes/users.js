@@ -1,13 +1,15 @@
+require('dotenv').config()
 const express = require("express");
 const User = require("../schemas/user");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const router = express.Router();
 
+
 //회원가입 조건
 const postUserSchema = Joi.object({
   ID: Joi.string().alphanum().min(4).max(12).required(),
-  nickname: Joi.string().alphanum().min(2).max(12).required(),
+  nickname: Joi.string().pattern(new RegExp('^[ㄱ-ㅎㅏ-ㅣ가-힇a-zA-Z0-9]{3,30}$')),
   password: Joi.string().min(4).required(),
   passwordCheck: Joi.string().required(),
 });
@@ -74,8 +76,8 @@ router.post("/login", async (req, res) => {
       });
       return;
     }
-
-    const token = jwt.sign( user.nickname , "my-secret-key");
+    // 변경사항 env
+    const token = jwt.sign( user.nickname , process.env.MY_SECRET_KEY);
     console.log(`${user.nickname}님이 로그인 하셨습니다.`);
     res.send({
       result: true,
