@@ -1,8 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const User = require("../schemas/user");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 
 //회원가입 조건
 const postUserSchema = Joi.object({
@@ -11,8 +13,48 @@ const postUserSchema = Joi.object({
   password: Joi.string().min(4).required(),
   passwordCheck: Joi.string().required(),
 });
+//회원가입 - 아이디 중복체크
+router.post("/idcheck", async (req, res, next) => {
+  try {
+    const { ID } = await postUserSchema.validateAsync(req.body);
+    const existID = await User.find({ ID });
+    
+    // if (!regexr.test(userId)) {
+    //   return res.status(403).send('아이디는 알파벳 대/소문자 또는 숫자만 사용가능하며 4~10글자여야 합니다.');
+    if (existID.length) {
+      return res.status(403).send("이미 사용중인 아이디입니다.");
+    }
+    res.status(201).send("사용할 수 있는 아이디입니다.");
+  } catch (err) {
+    console.error(err);
+    res.status(400).send({
+      errorMessage: "아이디는 알파벳 대/소문자 또는 숫자만 사용가능하며 4~12글자여야 합니다. ",
+    });
+    next(err);
+  }
+});
+//회원가입 - 닉네임 중복체크
+router.post("/nickcheck", async (req, res, next) => {
+  try {
+    const { nickname } = await postUserSchema.validateAsync(req.body);
+    const existnickname = await User.find({ nickname });
+    
+    // if (!regexr.test(userId)) {
+    //   return res.status(403).send('아이디는 알파벳 대/소문자 또는 숫자만 사용가능하며 4~10글자여야 합니다.');
+    if (existnickname.length) {
+      return res.status(403).send("이미 사용중인 닉네임입니다.");
+    }
+    res.status(201).send("사용할 수 있는 닉네임입니다.");
+  } catch (err) {
+    console.error(err);
+    res.status(400).send({
+      errorMessage: "닉네임은 한글 또는 알파벳 대/소문자, 숫자만 사용가능하며 2~12글자여야 합니다. ",
+    });
+    next(err);
+  }
+});
 //회원가입
-router.post("/signup", async (req, res) => {
+router.post("/signup", async (req, res, next) => {
   try {
     const { ID, nickname, password, passwordCheck } =
       await postUserSchema.validateAsync(req.body);
@@ -28,24 +70,28 @@ router.post("/signup", async (req, res) => {
       });
       return;
     }
-    const existID = await User.find({ ID });
-    if (existID.length) {
-      res.status(400).send({
-        errorMessage: "중복된 아이디입니다.",
-      });
-      return;
-    }
+    // const existID = await User.find({ ID });
+    // if (existID.length) {
+    //   res.status(400).send({
+    //     errorMessage: "중복된 아이디입니다.",
+    //   });
+    //   return ;
+    // }
 
-    const existnickname = await User.find({ nickname });
-    if (existnickname.length) {
-      res.status(400).send({
-        errorMessage: "중복된 닉네임입니다.",
-      });
-      return;
-    }
+    // const existnickname = await User.find({ nickname });
+    // if (existnickname.length) {
+    //   res.status(400).send({
+    //     errorMessage: "중복된 닉네임입니다.",
+    //   });
+    //   return ;
+    // }
 
-    const user = new User({ ID, nickname, password });
+    const hashPassword = bcrypt.hashSync(password, 12);
+    const user = new User({ ID, nickname, hashPassword });
     await user.save();
+
+    // const user = new User({ ID, nickname, password });
+    // await user.save();
 
     res.status(201).send({});
   } catch (err) {
@@ -53,6 +99,7 @@ router.post("/signup", async (req, res) => {
     res.status(400).send({
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
     });
+    next(err);
   }
 });
 
@@ -65,17 +112,16 @@ const postAuthSchema = Joi.object({
 router.post("/login", async (req, res) => {
   try {
     const { ID, password } = await postAuthSchema.validateAsync(req.body);
-    const user = await User.findOne({ ID, password }).exec();
-    console.log(user);
-
-    if (!user) {
+    const user = await User.findOne({ ID }).exec();
+    const isEqualPw = await bcrypt.compare(password, user.hashPassword);
+    if (!user.ID || !isEqualPw) {
       res.status(400).send({
-        errorMessage: "ID 또는 패스워드가 잘못됐습니다.",
+        errorMessage: "ID 또는 Password가 틀렸습니다.",
       });
       return;
     }
 
-    const token = jwt.sign( user.nickname , "my-secret-key");
+    const token = jwt.sign(user.nickname, process.env.MY_SECRET_KEY);
     console.log(`${user.nickname}님이 로그인 하셨습니다.`);
     res.send({
       result: true,

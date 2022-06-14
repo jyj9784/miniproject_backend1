@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const connect = () => {
-    mongoose.connect("mongodb+srv://test:sparta@cluster0.7o347.mongodb.net/blog?retryWrites=true&w=majority", { ignoreUndefined: true })
+    mongoose.connect(process.env.MONGO_URL, { ignoreUndefined: true })
     .catch((err) => {
         console.error(err);
     });

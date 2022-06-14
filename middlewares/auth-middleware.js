@@ -1,3 +1,4 @@
+require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const User = require("../schemas/user");
 
@@ -13,9 +14,9 @@ module.exports = (req, res, next) => {
   }
 
   try {
-    const { username } = jwt.verify(authToken, "my-secret-key");
-    console.log(username);
-    User.findOne({username}).then((user) => {
+    const { ID } = jwt.verify(authToken, process.env.MY_SECRET_KEY);
+    console.log(ID);
+    User.findOne({ID}).then((user) => {
       res.locals.user = user;
       console.log(user);
       next();
