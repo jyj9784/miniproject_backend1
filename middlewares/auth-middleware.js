@@ -14,11 +14,12 @@ module.exports = (req, res, next) => {
   }
 
   try {
-    const { ID } = jwt.verify(authToken, process.env.MY_SECRET_KEY);
-    console.log(ID);
-    User.findOne({ID}).then((user) => {
+    const nickname = jwt.verify(authToken, process.env.MY_SECRET_KEY);
+    // console.log("토큰 " + authToken);
+    // console.log("닉네임 " + nickname);
+    User.findOne({ nickname }).then((user) => {
       res.locals.user = user;
-      console.log(user);
+      // console.log(user);
       next();
     });
   } catch (err) {

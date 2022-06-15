@@ -1,2 +1,4 @@
 node_modules
 .env
+/routes/likes.js
+/schemas/like.js

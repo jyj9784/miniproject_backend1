@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   const posts = await Post.find(
     {},
-    { postId: 1, product: 1, content: 1, image: 1 }
+    { postId: 1, product: 1, content: 1, image: 1, nickname: 1 }
   ).sort({ postId: -1 });
   res.json({ posts });
 });
@@ -32,17 +32,48 @@ router.get("/:postId", async (req, res) => {
   res.json({ existsposts, existcomments });
 });
 
-//글 작성(false값 어떻게 내보낼지 보류)
+//끌어올리기
+router.put("/post/pull/:postId", authMiddleware, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const maxpostId = await Post.findOne().sort({
+      postId: -1,
+    });
+    const existspost = await Post.find({ postId });
+    if (!existspost.length) {
+      res.status(400).send({
+        errorMessage: "해당 게시물이 존재하지 않습니다.",
+      });
+      return;
+    }
+    if (maxpostId.postId) {
+      change = maxpostId.postId + 1;
+      console.log(change);
+    }
+    await Post.updateOne({ postId: postId }, { $set: { postId: change } });
+    return res.json({ result: true });
+  } catch (err) {
+    console.log(err);
+    res.status(400).send({
+      errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
+    });
+    next(err);
+  }
+});
+
+//글 작성(false값 어떻게 내보낼지 보류, 이미지 첨부 고려)
 router.post("/post", authMiddleware, async (req, res) => {
   const maxpostId = await Post.findOne().sort({
     postId: -1,
   });
+  // console.log(maxpostId)
   let postId = 1;
   if (maxpostId) {
     postId = maxpostId.postId + 1;
   }
 
   const { nickname } = res.locals.user;
+  // console.log(nickname);
   const { product, content, image } = req.body;
 
   await Post.create({
@@ -71,18 +102,20 @@ router.post("/post", authMiddleware, async (req, res) => {
 //   }
 // });
 
-//글 삭제 , 댓글까지 같이 삭제
+//글 삭제 , 댓글까지 같이 삭제(이미지 삭제까지 고려)
 router.delete("/:postId", authMiddleware, async (req, res) => {
   const { postId } = req.params;
-  const user = res.locals.user;
+  const { nickname } = res.locals.user;
+  console.log(nickname);
   const [existpost] = await Post.find({ postId: Number(postId) });
+  console.log(existpost);
 
-//   if (user.nickname !== existpost.nickname) {
-//     return res.status(400).json({
-//       result: false,
-//     });
-//   }
-  if (user.nickname === existpost.nickname) {
+  //   if (user.nickname !== existpost.nickname) {
+  //     return res.status(400).json({
+  //       result: false,
+  //     });
+  //   }
+  if (nickname === existpost.nickname) {
     await Post.deleteOne({ postId: Number(postId) });
     await Comment.deleteMany({ postId: Number(postId) });
     res.json({ result: true });

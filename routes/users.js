@@ -18,9 +18,7 @@ router.post("/idcheck", async (req, res, next) => {
   try {
     const { ID } = await postUserSchema.validateAsync(req.body);
     const existID = await User.find({ ID });
-    
-    // if (!regexr.test(userId)) {
-    //   return res.status(403).send('아이디는 알파벳 대/소문자 또는 숫자만 사용가능하며 4~10글자여야 합니다.');
+
     if (existID.length) {
       return res.status(403).send("이미 사용중인 아이디입니다.");
     }
@@ -28,7 +26,8 @@ router.post("/idcheck", async (req, res, next) => {
   } catch (err) {
     console.error(err);
     res.status(400).send({
-      errorMessage: "아이디는 알파벳 대/소문자 또는 숫자만 사용가능하며 4~12글자여야 합니다. ",
+      errorMessage:
+        "아이디는 알파벳 대/소문자 또는 숫자만 사용가능하며 4~12글자여야 합니다. ",
     });
     next(err);
   }
@@ -38,9 +37,7 @@ router.post("/nickcheck", async (req, res, next) => {
   try {
     const { nickname } = await postUserSchema.validateAsync(req.body);
     const existnickname = await User.find({ nickname });
-    
-    // if (!regexr.test(userId)) {
-    //   return res.status(403).send('아이디는 알파벳 대/소문자 또는 숫자만 사용가능하며 4~10글자여야 합니다.');
+
     if (existnickname.length) {
       return res.status(403).send("이미 사용중인 닉네임입니다.");
     }
@@ -48,7 +45,8 @@ router.post("/nickcheck", async (req, res, next) => {
   } catch (err) {
     console.error(err);
     res.status(400).send({
-      errorMessage: "닉네임은 한글 또는 알파벳 대/소문자, 숫자만 사용가능하며 2~12글자여야 합니다. ",
+      errorMessage:
+        "닉네임은 한글 또는 알파벳 대/소문자, 숫자만 사용가능하며 2~12글자여야 합니다. ",
     });
     next(err);
   }
@@ -70,28 +68,10 @@ router.post("/signup", async (req, res, next) => {
       });
       return;
     }
-    // const existID = await User.find({ ID });
-    // if (existID.length) {
-    //   res.status(400).send({
-    //     errorMessage: "중복된 아이디입니다.",
-    //   });
-    //   return ;
-    // }
-
-    // const existnickname = await User.find({ nickname });
-    // if (existnickname.length) {
-    //   res.status(400).send({
-    //     errorMessage: "중복된 닉네임입니다.",
-    //   });
-    //   return ;
-    // }
 
     const hashPassword = bcrypt.hashSync(password, 12);
     const user = new User({ ID, nickname, hashPassword });
     await user.save();
-
-    // const user = new User({ ID, nickname, password });
-    // await user.save();
 
     res.status(201).send({});
   } catch (err) {
@@ -128,11 +108,20 @@ router.post("/login", async (req, res) => {
       token,
     });
   } catch (err) {
-    console.log(err);
+    console.log("여긴가 " + err);
     res.status(400).send({
       result: false,
     });
   }
+});
+
+// 토큰정보 보내주기
+router.post("/loginInfo", async (req, res) => {
+  const { token } = req.body; 
+  console.log(token);
+  const userInfo = jwt.decode(token);
+  res.json({ userInfo });
+  console.log(userInfo);
 });
 
 // router.get("/User/me", authMiddleware, async (req, res) => {
