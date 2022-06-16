@@ -23,11 +23,6 @@ const { Schema } = mongoose;
       required: true
     }
 });
-// postSchema.virtual("ID").get(function () {
-//     return this._id.toHexString();
-//   });
-//   postSchema.set("toJSON", {
-//     virtuals: true,
-//   });
+
 
 module.exports = mongoose.model("Post", postSchema);
