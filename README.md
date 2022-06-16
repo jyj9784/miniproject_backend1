@@ -26,7 +26,7 @@ Tool : Git, Notion
 
 # 👨🏻‍🤝‍👨🏻팀원
 *BackEnd : 이창민, 이재석, 전영준  
-*FrontEnd : 김숙영, 임형섭
+*FrontEnd : 김숙영, 임형섭  
 *Back-end Git : https://github.com/jyj9784/miniproject_backend1  
 *Front-end Git : https://github.com/Maiowol/Mini-Project-2  
 
