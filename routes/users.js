@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const User = require("../schemas/user");
+const Post = require("../schemas/post");
+const authMiddleware = require("../middlewares/auth-middleware");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const router = express.Router();
@@ -9,7 +11,9 @@ const bcrypt = require("bcrypt");
 //회원가입 조건
 const postUserSchema = Joi.object({
   ID: Joi.string().alphanum().min(4).required(),
-  nickname: Joi.string().required().pattern(new RegExp('^[ㄱ-ㅎㅏ-ㅣ가-힇a-zA-Z0-9]{2,16}$')),
+  nickname: Joi.string()
+    .required()
+    .pattern(new RegExp("^[ㄱ-ㅎㅏ-ㅣ가-힇a-zA-Z0-9]{2,16}$")),
   password: Joi.string().min(4).required(),
   passwordCheck: Joi.string().required(),
 });
@@ -82,7 +86,42 @@ router.post("/signup", async (req, res, next) => {
     next(err);
   }
 });
+//프로필페이지 조회
+router.get("/profile", authMiddleware, async (req, res)=>{
+  try {
+    nickname = res.locals.user.nickname;
+    const [users] = await User.find({nickname},
+      { ID: 1, nickname: 1 , _id: 0}
+      );
+      const posts = await Post.find(
+        { nickname },
+        { postId: 1, product: 1, content: 1, image: 1, nickname: 1 }
+      ).sort({ postId: -1 });
+      
+    res.json( {users, posts} );
+  } catch (err) {
+    console.log(err);
+    res.status(400).send({
+      errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
+    });
+  }
+});
 
+//회원목록조회
+router.get("/getuser", async (req, res) => {
+  try {
+    const users = await User.find({},
+      { ID: 1, nickname: 1 , _id: 0}
+      ).sort('-ID');
+  
+    res.json( users );
+  } catch (err) {
+    console.log(err);
+    res.status(400).send({
+      errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
+    });
+  }
+});
 //로그인 조건 스키마
 const postAuthSchema = Joi.object({
   ID: Joi.string().required(),
@@ -102,13 +141,13 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(user.nickname, process.env.MY_SECRET_KEY);
-    console.log(`${user.nickname}님이 로그인 하셨습니다.`);
+    // console.log(`${user.nickname}님이 로그인 하셨습니다.`);
     res.send({
       result: true,
       token,
     });
   } catch (err) {
-    console.log("여긴가 " + err);
+    // console.log("여긴가 " + err);
     res.status(400).send({
       result: false,
     });
@@ -117,11 +156,11 @@ router.post("/login", async (req, res) => {
 
 // 토큰정보 보내주기
 router.post("/loginInfo", async (req, res) => {
-  const { token } = req.body; 
-  console.log(token);
+  const { token } = req.body;
+  // console.log(token);
   const userInfo = jwt.decode(token);
   res.json({ userInfo });
-  console.log(userInfo);
+  // console.log(userInfo);
 });
 
 // router.get("/User/me", authMiddleware, async (req, res) => {
