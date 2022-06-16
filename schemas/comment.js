@@ -17,11 +17,5 @@ const { Schema } = mongoose;
         required: true
     }
 });
-// commentSchema.virtual("userId").get(function () {
-//     return this._id.toHexString();
-//   });
-//   commentSchema.set("toJSON", {
-//     virtuals: true,
-//   });
 
 module.exports = mongoose.model("Comment", commentSchema);
