@@ -6,23 +6,14 @@ const router = express.Router();
 
 
 //전체 조회
-<<<<<<< HEAD
 router.get("/", async (req, res) => {
-=======
-router.get("/posts", async (req, res) => {
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
   try {
     const posts = await Post.find(
       {},
       { postId: 1, product: 1, content: 1, image: 1, nickname: 1 }
     ).sort({ postId: -1 });
     res.json({ posts });
-<<<<<<< HEAD
-  }
-  catch (err) {
-=======
   } catch (err) {
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
     console.log(err);
     res.status(400).send({
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
@@ -30,20 +21,12 @@ router.get("/posts", async (req, res) => {
   }
 });
 //게시글 한개 조회
-<<<<<<< HEAD
 router.get("/:postId", async (req, res) => {
-=======
-router.get("/posts/:postId", async (req, res) => {
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
   try {
     const { postId } = req.params;
     const existsposts = await Post.find(
       { postId },
-<<<<<<< HEAD
-      { postId: 1, product: 1, content: 1, image: 1, nickname: 1, _id: 0 }
-=======
       { postId: 1, product: 1, image: 1, content: 1, nickname: 1, _id: 0 }
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
     );
     if (!existsposts.length) {
       return res
@@ -56,19 +39,12 @@ router.get("/posts/:postId", async (req, res) => {
       { commentId: 1, product: 1, comment: 1, nickname: 1, _id: 0 }
     ).sort({ commentId: -1 });
     res.json({ existsposts, existcomments });
-<<<<<<< HEAD
-  }
-  catch (err) {
-=======
   } catch (err) {
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
     console.log(err);
     res.status(400).send({
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
     });
   }
-<<<<<<< HEAD
-=======
 });
 
 //게시물 검색(닉네임 일치시 해당 작성자 게시물을 검색함)
@@ -148,11 +124,9 @@ router.get("/productsearch", async (req, res) => {
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
     });
   }
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
 });
-
 //끌어올리기
-router.put("/posts/post/pull/:postId", authMiddleware, async (req, res) => {
+router.put("/post/pull/:postId", authMiddleware, async (req, res) => {
   try {
     const { postId } = req.params;
     const maxpostId = await Post.findOne().sort({
@@ -176,11 +150,12 @@ router.put("/posts/post/pull/:postId", authMiddleware, async (req, res) => {
     res.status(400).send({
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
     });
+
   }
 });
 
 //글 작성(false값 어떻게 내보낼지 보류, 이미지 첨부 고려)
-router.post("/posts/post", authMiddleware, async (req, res) => {
+router.post("/post", authMiddleware, async (req, res) => {
   try {
     const maxpostId = await Post.findOne().sort({
       postId: -1,
@@ -211,7 +186,6 @@ router.post("/posts/post", authMiddleware, async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
 //게시글 수정
 router.put("/:postId", authMiddleware, async (req, res) => {
 try{
@@ -220,42 +194,23 @@ try{
   const { nickname } = res.locals.user;
   const [existspost] = await Post.find({ postId });
 
-=======
-// 게시글 수정
-router.put("/posts/:postId", authMiddleware, async (req, res) => {
-  const { postId } = req.params;
-  const { product, content } = req.body;
-  const { nickname } = res.locals.user;
-
-  const [existspost] = await Post.find({ postId });
-  console.log(existspost.nickname);
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
   if (nickname !== existspost.nickname) {
     res.status(400).json({
       result: false,
       errorMessage: "본인이 작성한 게시물만 삭제할 수 있습니다.",
     });
   }
-<<<<<<< HEAD
-=======
 
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
   if (nickname === existspost.nickname || "admin" === nickname) {
     await Post.updateOne({ postId }, { $set: { content, product } });
     return res.status(201).json({ result: true });
   }
-<<<<<<< HEAD
 }catch(error){
   console.log(error);
   res.status(400).send({
     errorMessage: "게시글 수정부분에 에러가 있습니다.",
   });
 }
-
- 
-  
-=======
->>>>>>> 5d7570b9609915f8a7cee2035b49b69de8f46764
 });
 
 //글 삭제 , 댓글까지 같이 삭제(이미지 삭제까지 고려)
@@ -284,6 +239,64 @@ router.delete("/posts/:postId", authMiddleware, async (req, res) => {
     res.status(400).send({
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
     });
+router.post("/post", authMiddleware, async (req, res) => {
+  const maxpostId = await Post.findOne().sort({
+    postId: -1,
+  });
+  // console.log(maxpostId)
+  let postId = 1;
+  if (maxpostId) {
+    postId = maxpostId.postId + 1;
+  }
+
+  const { nickname } = res.locals.user;
+  // console.log(nickname);
+  const { product, content, image } = req.body;
+
+  await Post.create({
+    postId,
+    nickname,
+    product,
+    content,
+    image,
+  });
+  res.json({ result: true });
+});
+
+//게시글 수정
+// router.put("/post/:postId", authMiddleware, async (req, res) => {
+//   const { postId } = req.params;
+//   const { product, content } = req.body;
+
+//   const existspost = await posts.find({ postId });
+//   if (!existspost.length) {
+//     return res
+//       .status(400)
+//       .json({ success: false, errorMessage: "찾는 게시물 없음." });
+//   } else {
+//     await posts.updateOne({ postId }, { $set: { content, product } });
+//     return res.json({ success: true });
+//   }
+// });
+
+//글 삭제 , 댓글까지 같이 삭제(이미지 삭제까지 고려)
+router.delete("/:postId", authMiddleware, async (req, res) => {
+  const { postId } = req.params;
+  const { nickname } = res.locals.user;
+  console.log(nickname);
+  const [existpost] = await Post.find({ postId: Number(postId) });
+  console.log(existpost);
+
+  //   if (user.nickname !== existpost.nickname) {
+  //     return res.status(400).json({
+  //       result: false,
+  //     });
+  //   }
+  if (nickname === existpost.nickname) {
+    await Post.deleteOne({ postId: Number(postId) });
+    await Comment.deleteMany({ postId: Number(postId) });
+    res.json({ result: true });
+    return;
   }
 });
 

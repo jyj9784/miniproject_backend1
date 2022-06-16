@@ -73,6 +73,7 @@ router.delete("/:postId/:commentId", authMiddleware, async (req, res) => {
   }
 });
 
+
 // //댓글 수정
 
 // router.put("/postId/:commentId", authMiddleware, async (req, res) => {
