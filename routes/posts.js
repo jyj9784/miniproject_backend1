@@ -6,38 +6,46 @@ const router = express.Router();
 
 //전체 조회
 router.get("/", async (req, res) => {
-  try {const posts = await Post.find(
-    {},
-    { postId: 1, product: 1, content: 1, image: 1, nickname: 1 }
-  ).sort({ postId: -1 });
-  res.json({ posts });}
-  catch (err) {console.log(err);
+  try {
+    const posts = await Post.find(
+      {},
+      { postId: 1, product: 1, content: 1, image: 1, nickname: 1 }
+    ).sort({ postId: -1 });
+    res.json({ posts });
+  }
+  catch (err) {
+    console.log(err);
     res.status(400).send({
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
-    });}
+    });
+  }
 });
 //게시글 한개 조회
 router.get("/:postId", async (req, res) => {
-  try {const { postId } = req.params;
-  const existsposts = await Post.find(
-    { postId },
-    { postId: 1, product: 1, content: 1, nickname: 1, _id: 0 }
-  );
-  if (!existsposts.length) {
-    return res
-      .status(400)
-      .json({ success: false, errorMessage: "찾는 게시물 없음." });
-  }
+  try {
+    const { postId } = req.params;
+    const existsposts = await Post.find(
+      { postId },
+      { postId: 1, product: 1, content: 1, image: 1, nickname: 1, _id: 0 }
+    );
+    if (!existsposts.length) {
+      return res
+        .status(400)
+        .json({ success: false, errorMessage: "찾는 게시물 없음." });
+    }
 
-  const existcomments = await Comment.find(
-    { postId },
-    { commentId: 1, product: 1, comment: 1, nickname: 1, _id: 0 }
-  ).sort({ commentId: -1 });
-  res.json({ existsposts, existcomments });}
-  catch (err) {console.log(err);
+    const existcomments = await Comment.find(
+      { postId },
+      { commentId: 1, product: 1, comment: 1, nickname: 1, _id: 0 }
+    ).sort({ commentId: -1 });
+    res.json({ existsposts, existcomments });
+  }
+  catch (err) {
+    console.log(err);
     res.status(400).send({
       errorMessage: "요청한 데이터 형식이 올바르지 않습니다.",
-    });}
+    });
+  }
 });
 
 //끌어올리기
@@ -101,20 +109,33 @@ router.post("/post", authMiddleware, async (req, res) => {
 });
 
 //게시글 수정
-// router.put("/post/:postId", authMiddleware, async (req, res) => {
-//   const { postId } = req.params;
-//   const { product, content } = req.body;
+router.put("/:postId", authMiddleware, async (req, res) => {
+try{
+ const { postId } = req.params;
+  const { product, content } = req.body;
+  const { nickname } = res.locals.user;
+  const [existspost] = await Post.find({ postId });
 
-//   const existspost = await posts.find({ postId });
-//   if (!existspost.length) {
-//     return res
-//       .status(400)
-//       .json({ success: false, errorMessage: "찾는 게시물 없음." });
-//   } else {
-//     await posts.updateOne({ postId }, { $set: { content, product } });
-//     return res.json({ success: true });
-//   }
-// });
+  if (nickname !== existspost.nickname) {
+    res.status(400).json({
+      result: false,
+      errorMessage: "본인이 작성한 게시물만 삭제할 수 있습니다.",
+    });
+  }
+  if (nickname === existspost.nickname || "admin" === nickname) {
+    await Post.updateOne({ postId }, { $set: { content, product } });
+    return res.status(201).json({ result: true });
+  }
+}catch(error){
+  console.log(error);
+  res.status(400).send({
+    errorMessage: "게시글 수정부분에 에러가 있습니다.",
+  });
+}
+
+ 
+  
+});
 
 //글 삭제 , 댓글까지 같이 삭제(이미지 삭제까지 고려)
 router.delete("/:postId", authMiddleware, async (req, res) => {
